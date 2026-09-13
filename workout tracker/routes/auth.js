@@ -21,11 +21,29 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({message: 'User aleadey exists'});
         }
 
-        const newUser = await User.create({ username, email, password });
-        res.status(201).json({message: 'User registered successfully' , user: newUser});
+        //1. hash password before saving
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        
+        //2. save user with hashed password
+        const newUser = await User.create({ 
+            username,
+            email,
+            password: hashedPassword
+        });
+
+        //3. send response without password into JSON
+        res.status(201).json({
+            message: 'User registered successfully' ,
+            user: {
+                id: newUser._id,
+                username: newUser.username,
+                email: newUser.email
+            }
+        });
 
     } catch (err) {
-        res.status(500).json({message: 'Server Error'});
+        res.status(500).json({message: 'Server Error', error: err.message });
     }
 });
 
