@@ -5,7 +5,7 @@ const auth = require('../middleware/authMiddleware');
 
 // POST /api/workouts/add
 router.post('/add', auth, async (req, res) => {
-    const {exercise, sets, reps, weight, date} = req.body;
+    const {exercise, sets, reps, weight, comment, date} = req.body;
 
     if (!exercise || !sets || !reps || !weight ) {
         return res.status(400).json({message: 'All fields are required'});
@@ -18,6 +18,7 @@ router.post('/add', auth, async (req, res) => {
             sets,
             reps,
             weight,
+            comment: comment || '',
             date: date || Date.now(), 
     });
     
@@ -29,30 +30,8 @@ router.post('/add', auth, async (req, res) => {
 });
 
 
-/*
-// POST /api/workouts/list
-router.post('/list', auth, async (req, res) => {
-    const username = req.user.username;
-
-    try {
-
-        const workouts = await Workout.find({
-            user: req.user.id,
-            exercise: req.body.exercise,
-            sets: req.body.sets,
-            reps: req.body.reps,
-            weight: req.body.weight,
-            date: req.body.date
-        });
-
-        res.status(200).json(workouts);
-    
-    } catch (err) {
-        res.status(500).json ({message: 'Server Error', error: err.message});
-    }
-});
-*/
-
+// GET /api/workouts/
+//token - person token in auth
 router.get ('/',auth, async (req, res) => {
     try {
         //fetch all workout that belong to the user
@@ -65,6 +44,9 @@ router.get ('/',auth, async (req, res) => {
     }
 });
 
+
+//DELETE /api/workouts/"id of exercise"
+//token - person token in auth
 router.delete('/:id', auth, async (req, res) => {
     try {
         const workout = await Workout.findById(req.params.id);
@@ -85,6 +67,39 @@ router.delete('/:id', auth, async (req, res) => {
     }
 });
 
+//PATCH /api/workouts/"id of exercise"/comment
+//token - person token in auth
+router.patch('/:id/comment', auth, async (req, res) => {
+    try{
+
+        if (!req.body || !req.body.comment) {
+            return res.status(400).json({message: 'Comment field is required'});
+        }
+
+        const workout = await Workout.findById(req.params.id);
+        const {comment} = req.body;
+
+        if (!workout) {
+            return res.status(404).json({message: 'Workout not found'});
+        }
+
+        if (workout.user.toString() !== req.user.id) {
+            return res.status(401).json({message: 'Unauthorized'});
+        }
+
+        workout.comment = comment;
+        await workout.save();
+
+        res.status(200).json({message: 'Comment updated successfully', workout });
+
+    }catch (err) {
+        res.status(500).json ({message: 'Server Error', error: err.message});
+    }
+});
+
+
+
+
+
+
 module.exports = router;
-
-

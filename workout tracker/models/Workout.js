@@ -28,11 +28,16 @@ const WorkoutSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
-    
+
+    comment: {
+        type: String,
+        default: '',
+    },
+
     date: {
         type: Date,
         default: Date.now,
-        required: true /*,
+         /*,
         validate: {
             validator: function (value) {
                 return value <= Date.now();
